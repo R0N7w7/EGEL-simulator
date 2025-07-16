@@ -1,0 +1,22 @@
+{
+  "name": "egel-simulator",
+  "version": "1.0.0",
+  "main": "main/main.js",
+  "scripts": {
+    "install:all": "npm install && npm install --prefix renderer",
+    "dev": "concurrently -k \"npm:dev:*\"",
+    "dev:main": "electron main/main.js",
+    "dev:renderer": "npm --prefix renderer run dev",
+    "start": "electron .",
+    "build:renderer": "npm --prefix renderer run build",
+    "build:main": "electron-builder",
+    "build": "npm run build:renderer && electron-builder"
+  },
+  "devDependencies": {
+    "concurrently": "^8.0.0",
+    "electron": "^27.0.0",
+    "typescript": "^5.0.0",
+    "ts-node": "^10.9.1",
+    "electron-builder": "^24.3.0"
+  }
+}
