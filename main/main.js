@@ -1,4 +1,7 @@
+require('dotenv').config();
 const { app, BrowserWindow, ipcMain, Notification } = require('electron');
+const db = require('./db/index.js');
+const { registerIpcHandlers } = require('./ipc/index.js');
 const path = require('path');
 
 function createWindow() {
@@ -10,27 +13,29 @@ function createWindow() {
         resizable: true,
         webPreferences: {
             preload: path.join(__dirname, 'preload.js'),
-            nodeIntegration: true,
+            nodeIntegration: false,
             contextIsolation: true,
-            devTools: false,
+            devTools: !app.isPackaged,
         },
         autoHideMenuBar: true,
     });
 
     if (!app.isPackaged) {
-        // No está empaquetado = modo desarrollo
         win.loadURL('http://localhost:5173');
         win.webContents.openDevTools();
     } else {
-        // Está empaquetado = producción
         win.loadFile(path.join(__dirname, '../renderer/dist/index.html'));
     }
 
     win.show();
 }
 
+app.disableHardwareAcceleration();
+
 app.whenReady().then(async () => {
     try {
+        await db.sequelize.sync({ force: true });
+        registerIpcHandlers();
         createWindow();
     } catch (error) {
         console.error(error);
