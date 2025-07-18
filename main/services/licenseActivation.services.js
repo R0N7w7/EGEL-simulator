@@ -7,7 +7,6 @@ class LicenseActivationService {
      * @returns {Promise<Object>} Objeto creado
      */
     async create(data) {
-        console.log("Creating license activation with data:", data);
         const activation = await db.LicenseActivation.create(data);
         return activation.get({ plain: true });
     }
