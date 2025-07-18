@@ -7,6 +7,7 @@
 const { ipcMain } = require('electron');
 const { licenseActivationService } = require('../../services/licenseActivation.services.js');
 const { licenseRemoteService } = require('../../services/remoteLicense.services.js');
+const { errorResponse, successResponse } = require('../utils/ipcResponse.js');
 const machineIdSync = require('node-machine-id').machineIdSync;
 
 /**
@@ -114,48 +115,45 @@ const registerLicenseActivationHandlers = () => {
     * @throws {Error} Si la licencia no es válida, está inactiva o no puede asociarse.
     */
     ipcMain.handle('licenseActivation:verifyAndActivateKey', async (_event, productKey) => {
-        // 1️⃣ Obtener identificador único del dispositivo
         const machineId = machineIdSync();
 
-        // 2️⃣ Consultar la licencia en Supabase usando la clave proporcionada
-        const license = await licenseRemoteService.fetchLicenseByKey(productKey);
-        if (!license) {
-            throw new Error('Licencia no encontrada en el servidor remoto.');
+        try {
+            const license = await licenseRemoteService.fetchLicenseByKey(productKey);
+            if (!license) {
+                return errorResponse('LICENSE_NOT_FOUND', 'Licencia no encontrada en el servidor remoto.');
+            }
+
+            if (license.status !== 'active') {
+                return errorResponse('LICENSE_INACTIVE', 'Licencia inactiva o revocada. Contacte al soporte.');
+            }
+
+            if (license.machineId && license.machineId !== machineId) {
+                return errorResponse('LICENSE_ALREADY_BOUND', 'Esta clave ya está activada en otro dispositivo.');
+            }
+
+            const bindSuccess = await licenseRemoteService.bindLicenseToMachine(productKey, machineId);
+            if (!bindSuccess) {
+                return errorResponse('BIND_FAILED', 'Error al asociar la licencia en el servidor remoto.');
+            }
+
+            const existingLocal = await licenseActivationService.findByProductKey(productKey);
+            if (existingLocal) {
+                return successResponse(existingLocal);
+            }
+
+            const localActivation = await licenseActivationService.create({
+                productKey,
+                machineId,
+                careerId: license.careerId,
+                signature: license.signature,
+            });
+
+            return successResponse(localActivation);
+
+        } catch (err) {
+            return errorResponse('UNEXPECTED_ERROR', err.message || 'Ocurrió un error inesperado.');
         }
-
-        // 3️⃣ Validar estado de la licencia
-        if (license.status !== 'active') {
-            throw new Error('Licencia inactiva o revocada. Contacte al soporte.');
-        }
-
-        // 4️⃣ Verificar si ya está asociada a otro dispositivo
-        if (license.machineId && license.machineId !== machineId) {
-            throw new Error('Esta clave ya está activada en otro dispositivo.');
-        }
-
-        // 5️⃣ Asociar la licencia al dispositivo en Supabase
-        const bindSuccess = await licenseRemoteService.bindLicenseToMachine(productKey, machineId);
-        if (!bindSuccess) {
-            throw new Error('Error al asociar la licencia en el servidor remoto.');
-        }
-
-        // 6️⃣ Verificar existencia local para evitar duplicados
-        const existingLocal = await licenseActivationService.findByProductKey(productKey);
-        if (existingLocal) {
-            return existingLocal;
-        }
-
-        // 7️⃣ Crear registro local de la activación
-        const localActivation = await licenseActivationService.create({
-            productKey,
-            machineId,
-            careerId: license.careerId,
-            signature: license.signature,
-        });
-
-        return localActivation;
     });
-
 };
 
 module.exports = {

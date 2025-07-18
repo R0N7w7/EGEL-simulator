@@ -46,22 +46,11 @@ const AuthPage = () => {
             return
         }
 
-        // Simular validación en servidor
-        await new Promise((resolve) => setTimeout(resolve, 2000))
-
-        // Simular diferentes respuestas del servidor
-        const random = Math.random()
-        if (random < 0.1) {
-            setKeyError("No se pudo validar la clave. Verifique su conexión a internet.")
-        } else if (random < 0.2) {
-            setKeyError("Esta clave ya está en uso por otro usuario.")
-        } else if (random < 0.3) {
-            setKeyError("Clave inválida o expirada.")
-        } else {
-            setIsKeyValid(true)
-            setTimeout(() => {
-                navigate("/dashboard", { replace: true })
-            }, 1500)
+        // call to icp protocol to validate the key
+        try {
+            await window.api.licenseActivation.verifyAndActivateKey("93ca35a2-c59a-4396-8a3a-ab4283f3d04b");
+        } catch (error) {
+            console.error("Error al validar la clave de producto:", error);
         }
 
         setIsValidating(false)
