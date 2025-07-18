@@ -23,3 +23,12 @@ type LicenseActivation = {
     createdAt?: string;
     updatedAt?: string;
 };
+
+interface EGELQuestion {
+    id: string;
+    question: string;
+    options: string[];
+    correctAnswerIndex: number;
+    block: "transversal" | "disciplinary";
+    subtopic?: string;
+}
