@@ -1,9 +1,12 @@
 import { BookOpen, CheckCircle, XCircle } from "lucide-react"
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useVerifyKey } from "../features/auth/hooks/useVerifyKey";
 
 const AuthPage = () => {
     const navigate = useNavigate();
+    const { verifyKey } = useVerifyKey();
+
     // You may need to define these states and handlers if not already present
     const [productKey, setProductKey] = useState("");
     const [isKeyValid, setIsKeyValid] = useState(false);
@@ -46,11 +49,16 @@ const AuthPage = () => {
             return
         }
 
-        // call to icp protocol to validate the key
-        try {
-            await window.api.licenseActivation.verifyAndActivateKey("93ca35a2-c59a-4396-8a3a-ab4283f3d04b");
-        } catch (error) {
-            console.error("Error al validar la clave de producto:", error);
+        const result = await verifyKey(key);
+        if (result.success) {
+            setIsKeyValid(true);
+            navigate("/main");
+        } else {
+            setKeyError(
+                "error" in result && result.error.message
+                    ? result.error.message
+                    : "Error al validar la clave de producto."
+            );
         }
 
         setIsValidating(false)
