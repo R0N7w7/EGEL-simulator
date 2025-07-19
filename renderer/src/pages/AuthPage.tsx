@@ -1,11 +1,10 @@
 import { BookOpen, CheckCircle, XCircle } from "lucide-react"
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useVerifyKey } from "../features/auth/hooks/useVerifyKey";
+import { verifyKey } from "../features/auth/services/verifyKey";
 
 const AuthPage = () => {
     const navigate = useNavigate();
-    const { verifyKey } = useVerifyKey();
 
     // You may need to define these states and handlers if not already present
     const [productKey, setProductKey] = useState("");
