@@ -28,7 +28,7 @@ class LicenseRemoteService {
      * @returns {Promise<boolean>}
      */
     async bindLicenseToMachine(productKey, machineId) {
-        const { data, error } = await supabase
+        const { error } = await supabase
             .from('licenses')
             .update({ machineId, activated_at: new Date().toISOString() })
             .eq('product_key', productKey);
