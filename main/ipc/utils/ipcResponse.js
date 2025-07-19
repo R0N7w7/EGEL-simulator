@@ -14,6 +14,9 @@ function successResponse(data) {
  * @returns {{ success: false, error: { code: string, message: string } }}
  */
 function errorResponse(code, message) {
+    //show a log message in the console with error
+    console.error(`IPC Error [${code}]: ${message}`); // potentially should be delete this line in production
+    // or use a logging library for better control
     return {
         success: false,
         error: { code, message },
