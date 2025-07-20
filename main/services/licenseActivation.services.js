@@ -12,27 +12,12 @@ class LicenseActivationService {
     }
 
     /**
-     * Crea varias licencias de activación (bulk).
-     * @param {Array<Object>} dataArray
-     * @returns {Promise<Array<Object>>} Array con objetos creados
-     */
-    async bulkCreate(dataArray) {
-        const activations = await db.LicenseActivation.bulkCreate(dataArray, {
-            returning: true,
-        });
-        // No excluye signature en bulkCreate, asume uso interno
-        return activations.map(a => a.get({ plain: true }));
-    }
-
-    /**
      * Obtiene todas las activaciones (para debug o uso especial).
      * Omite el campo signature para seguridad.
      * @returns {Promise<Array<Object>>}
      */
     async findAll() {
-        const activations = await db.LicenseActivation.findAll({
-            attributes: { exclude: ['signature'] },
-        });
+        const activations = await db.LicenseActivation.findAll();
         return activations.map(a => a.get({ plain: true }));
     }
 
@@ -43,9 +28,7 @@ class LicenseActivationService {
      * @returns {Promise<Object|null>}
      */
     async findById(id) {
-        const activation = await db.LicenseActivation.findByPk(id, {
-            attributes: { exclude: ['signature'] },
-        });
+        const activation = await db.LicenseActivation.findByPk(id);
         return activation ? activation.get({ plain: true }) : null;
     }
 
@@ -58,7 +41,6 @@ class LicenseActivationService {
     async findByProductKey(productKey) {
         const activation = await db.LicenseActivation.findOne({
             where: { productKey },
-            attributes: { exclude: ['signature'] },
         });
         return activation ? activation.get({ plain: true }) : null;
     }
@@ -69,9 +51,7 @@ class LicenseActivationService {
      * @returns {Promise<Object|null>}
      */
     async findFirst() {
-        const activation = await db.LicenseActivation.findOne({
-            attributes: { exclude: ['signature'] },
-        });
+        const activation = await db.LicenseActivation.findOne();
         return activation ? activation.get({ plain: true }) : null;
     }
 

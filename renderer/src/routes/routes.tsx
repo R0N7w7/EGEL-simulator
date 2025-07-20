@@ -1,12 +1,12 @@
 import type { RouteObject } from "react-router-dom";
-import { Navigate } from "react-router-dom";
 import AuthPage from "../pages/AuthPage";
 import HomePage from "../pages/HomePage";
+import { AuthLoader } from "../features/auth/components/AuthLoader";
 
 export const appRoutes: RouteObject[] = [
     {
         path: '/',
-        element: <Navigate to={'/auth'} />,
+        element: <AuthLoader />,
     },
     {
         path: '/auth',

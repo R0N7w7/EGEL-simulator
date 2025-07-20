@@ -1,11 +1,12 @@
 import { BookOpen, CheckCircle, XCircle } from "lucide-react"
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useVerifyKey } from "../features/auth/hooks/useVerifyKey";
+import { verifyKey } from "../features/auth/services/verifyKey";
+const { useLicenseStore } = await import("../features/auth/hooks/useLicenseStore");
 
 const AuthPage = () => {
+    const { refresh } = useLicenseStore.getState();
     const navigate = useNavigate();
-    const { verifyKey } = useVerifyKey();
 
     // You may need to define these states and handlers if not already present
     const [productKey, setProductKey] = useState("");
@@ -51,6 +52,7 @@ const AuthPage = () => {
 
         const result = await verifyKey(key);
         if (result.success) {
+            await refresh();
             setIsKeyValid(true);
             navigate("/home");
         } else {
