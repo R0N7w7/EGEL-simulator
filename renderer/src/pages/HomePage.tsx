@@ -19,7 +19,7 @@ const HomePage = () => {
         <div className="min-h-screen bg-gradient-to-b from-white via-lime-50 to-white flex items-center justify-center p-6 font-serif relative">
 
             
-            {/* Contenedor del contenido principal */ /* si no jala la sombra fuerzaloo */} 
+            {/* Contenedor del contenido principal */ /* si no jala la sombra fuerzaloooo */} 
             <div className="bg-white rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.1)] border border-lime-50 p-12 w-full max-w-3xl min-h-[500px] text-black space-y-8 z-10 flex flex-col justify-center">
 
                 {/* Sección superior: ícono título descripción */}
