@@ -20,29 +20,27 @@ const HomePage = () => {
 
             
             {/* Contenedor del contenido principal */ /* si no jala la sombra fuerzaloooo */} 
-            <div className="bg-white rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.1)] border border-lime-50 p-12 w-full max-w-3xl min-h-[500px] text-black space-y-8 z-10 flex flex-col justify-center">
+            <div className="bg-white rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.1)] border border-lime-50 p-12 w-full max-w-3xl min-h-[500px] text-black z-10 flex flex-col justify-center">
 
                 {/* Sección superior: ícono título descripción */}
                 <div className="flex flex-col items-center text-center space-y-4">
                     <div className="bg-gradient-to-r from-green-100 to-emerald-100 rounded-full p-5 shadow-inner">
                         <Orbit className="h-12 w-12 text-green-700" />
                     </div>
-                    <br></br>
                     <h1 className="text-4xl font-extrabold text-green-700">Simulador de Examen</h1>
 
-                    <p className="text-gray-600 font-normal text-[16px] font-serif leading-relaxed max-w-sm">
-                        <br />
+                    <p className="text-gray-600 font-normal text-base font-serif leading-relaxed max-w-sm">
                         Aprende, practica y mejora a tu ritmo con herramientas diseñadas para tu éxito.
                     </p>
                 </div>
 
                 {/* Botones de navegación */}
-                <div className="space-y-5 mt-6">
+                <div className="space-y-5 mt-12">
 
                     {/* Botón Empezar Simulacro con icono de Sparkles */}
                     <button
                         onClick={() => handleClick("/simulacion")}
-                        className="w-full transition-all duration-300 ease-in-out transform hover:-translate-y-1 hover:shadow-lg flex items-center justify-center space-x-3 bg-green-600 text-white py-4 rounded-2xl text-lg font-semibold hover:bg-green-700"
+                        className="cursor-pointer w-full transition-all duration-300 ease-in-out transform hover:-translate-y-1 hover:shadow-lg flex items-center justify-center space-x-3 bg-green-600 text-white py-4 rounded-2xl text-lg font-semibold hover:bg-green-700"
                     >
                         <Sparkles className="h-6 w-6" />
                         <span>Empezar Simulacro</span>
@@ -51,7 +49,7 @@ const HomePage = () => {
                     {/* Botón Ver Historial */}
                     <button
                         onClick={() => handleClick("/historial")}
-                        className="w-full transition-all duration-300 ease-in-out transform hover:-translate-y-1 hover:shadow-lg flex items-center justify-center space-x-3 bg-white text-black py-4 rounded-2xl text-lg font-medium hover:bg-emerald-100"
+                        className="cursor-pointer w-full transition-all duration-300 ease-in-out transform hover:-translate-y-1 hover:shadow-lg flex items-center justify-center space-x-3 bg-white text-black py-4 rounded-2xl text-lg font-medium hover:bg-emerald-100"
                     >
                         <Clock className="h-6 w-6 text-green-500" />
                         <span>Ver Historial</span>
@@ -60,7 +58,7 @@ const HomePage = () => {
                     {/* Botón Estadísticas */}
                     <button
                         onClick={() => handleClick("/estadisticas")}
-                        className="w-full transition-all duration-300 ease-in-out transform hover:-translate-y-1 hover:shadow-lg flex items-center justify-center space-x-3 bg-white text-black py-4 rounded-2xl text-lg font-medium hover:bg-emerald-100"
+                        className="cursor-pointer w-full transition-all duration-300 ease-in-out transform hover:-translate-y-1 hover:shadow-lg flex items-center justify-center space-x-3 bg-white text-black py-4 rounded-2xl text-lg font-medium hover:bg-emerald-100"
                     >
                         <LineChart className="h-6 w-6 text-green-500" />
                         <span>Estadísticas</span>

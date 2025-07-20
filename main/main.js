@@ -34,7 +34,7 @@ app.disableHardwareAcceleration();
 
 app.whenReady().then(async () => {
     try {
-        await db.sequelize.sync({ force: true });
+        await db.sequelize.sync({ force: false });
         registerIpcHandlers();
         createWindow();
     } catch (error) {
