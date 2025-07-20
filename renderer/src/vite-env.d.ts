@@ -5,6 +5,11 @@
 interface Window {
     api: {
         licenseActivation: {
+            verifyLocalActivation(): () => Promise<{
+                success: boolean;
+                data?: LicenseActivation;
+                error?: { code: string; message: string };
+            }>;
             verifyAndActivateKey: (productKey: string) => Promise<{
                 success: boolean;
                 data?: LicenseActivation;
