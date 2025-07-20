@@ -52,7 +52,7 @@ const AuthPage = () => {
         const result = await verifyKey(key);
         if (result.success) {
             setIsKeyValid(true);
-            navigate("/main");
+            navigate("/home");
         } else {
             setKeyError(
                 "error" in result && result.error.message
