@@ -9,6 +9,7 @@ const { licenseActivationService } = require('../../services/licenseActivation.s
 const { licenseRemoteService } = require('../../services/remoteLicense.services.js');
 const { errorResponse, successResponse } = require('../utils/ipcResponse.js');
 const machineIdSync = require('node-machine-id').machineIdSync;
+const { verifySignature, generateSignature } = require('../utils/signature.js');
 
 /**
  * Registra todos los canales de IPC para gestionar licencias de activación.
@@ -32,15 +33,6 @@ const registerLicenseActivationHandlers = () => {
      */
     ipcMain.handle('licenseActivation:create', (_event, data) =>
         licenseActivationService.create(data)
-    );
-
-    /**
-     * Inserta múltiples licencias de activación.
-     * Responde a: 'licenseActivation:bulkCreate'
-     * @param {Array<Object>} arrayData - Array de datos de licencias.
-     */
-    ipcMain.handle('licenseActivation:bulkCreate', (_event, arrayData) =>
-        licenseActivationService.bulkCreate(arrayData)
     );
 
     /**
@@ -141,17 +133,66 @@ const registerLicenseActivationHandlers = () => {
                 return successResponse(existingLocal);
             }
 
-            const localActivation = await licenseActivationService.create({
+            const payload = {
                 productKey,
                 machineId,
-                careerId: license.careerId,
-                signature: license.signature,
+            };
+
+            const signature = generateSignature(payload);
+
+            const localActivation = await licenseActivationService.create({
+                ...payload,
+                signature,
             });
 
             return successResponse(localActivation);
 
         } catch (err) {
             return errorResponse('UNEXPECTED_ERROR', err.message || 'Ocurrió un error inesperado.');
+        }
+    });
+
+    /**
+     * Valida la licencia almacenada localmente.
+     * Responde a: 'licenseActivation:validate'
+     *
+     * Flujo:
+     *  1. Obtiene la primera licencia activada localmente.
+     *  2. Reconstruye el payload usado para firmar originalmente.
+     *  3. Verifica la validez de la firma.
+     *  4. Si es inválida, elimina la licencia local y retorna error.
+     *  5. Si es válida, retorna la licencia validada.
+     *
+     * Esta verificación permite asegurar que la licencia no fue alterada
+     * o corrompida desde su activación.
+     *
+     * @returns {Promise<Object>} Licencia validada o error si es inválida.
+     */
+    ipcMain.handle('licenseActivation:verifyLocalActivation', async () => {
+        const machineId = machineIdSync();
+
+        try {
+            const license = await licenseActivationService.findFirst();
+
+            if (!license) {
+                return errorResponse('NO_LOCAL_LICENSE', 'No se encontró una licencia local para validar.');
+            }
+
+            const payload = {
+                productKey: license.productKey,
+                machineId
+            };
+
+            const isValid = verifySignature(payload, license.signature);
+
+            if (!isValid) {
+                await licenseActivationService.delete(license.id);
+                return errorResponse('INVALID_SIGNATURE', 'La firma de la licencia no es válida. Se ha eliminado el registro local.');
+            }
+
+            return successResponse(license);
+        } catch (err) {
+            return errorResponse('VALIDATION_ERROR', err.message || 'Error durante la validación de la licencia.');
         }
     });
 };

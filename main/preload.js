@@ -21,10 +21,10 @@ contextBridge.exposeInMainWorld('api', {
         findByProductKey: (productKey) => ipcRenderer.invoke('licenseActivation:findByProductKey', productKey),
 
         /**
-         * Obtiene la primera activación guardada (uso más común).
-         * @returns {Promise<Object|null>}
+         * Verifica si existe una activación local válida.
+         * @returns {Promise<Object|null>} Retorna la activación si es válida, null si no existe o es inválida.
          */
-        findFirst: () => ipcRenderer.invoke('licenseActivation:findFirst'),
+        verifyLocalActivation: () => ipcRenderer.invoke('licenseActivation:verifyLocalActivation'),
 
         /**
          * valida una licencia remota en Supabase.
