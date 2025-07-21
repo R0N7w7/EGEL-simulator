@@ -1,7 +1,9 @@
 import type { RouteObject } from "react-router-dom";
 import AuthPage from "../pages/AuthPage";
 import HomePage from "../pages/HomePage";
+import SetupPage from "../pages/SetupPage";
 import { AuthLoader } from "../features/auth/components/AuthLoader";
+import SimulacionPage from "../pages/SimulacionPage";
 
 export const appRoutes: RouteObject[] = [
     {
@@ -15,5 +17,15 @@ export const appRoutes: RouteObject[] = [
     {
         path: '/home',
         element: <HomePage />
+    },
+
+    {
+        path: '/setup',
+        element: <SetupPage />,
+    },
+
+    {
+        path: '/simulacion',
+        element: <SimulacionPage />,
     }
 ];
