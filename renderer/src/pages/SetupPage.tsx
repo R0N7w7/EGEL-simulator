@@ -1,20 +1,17 @@
 import { ArrowLeft, Play } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
-import { useSetupStore } from "../features/auth/hooks/useSetupStore";
+import { useSetupStore } from "../features/EGEL/hooks/useSetupStore";
 
 const SetupPage = () => {
     const navigate = useNavigate();
 
-    // obtenemos la función para guardar configuración en zustand
     const setConfig = useSetupStore((state) => state.setConfig);
 
-    // estados locales para la configuración
     const [selectedArea, setSelectedArea] = useState("ambas");
     const [timerEnabled, setTimerEnabled] = useState(true);
     const [practiceMode, setPracticeMode] = useState(false);
 
-    // cuando el usuario hace clic en "iniciar simulacro"
     const handleClick = () => {
         const simulationSettings = {
             area: selectedArea,

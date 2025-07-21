@@ -17,7 +17,6 @@ export const appRoutes: RouteObject[] = [
         path: '/home',
         element: <HomePage />
     },
-
     {
         path: '/setup',
         element: <SetupPage />,
