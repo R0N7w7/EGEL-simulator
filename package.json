@@ -13,8 +13,6 @@
     "build": "npm run build:renderer && electron-builder"
   },
   "devDependencies": {
-    "@types/react": "^19.1.8",
-    "@types/react-dom": "^19.1.6",
     "concurrently": "^8.0.0",
     "electron": "^27.0.0",
     "electron-builder": "^24.3.0",
@@ -25,11 +23,8 @@
     "@supabase/supabase-js": "^2.51.0",
     "crypto": "^1.0.1",
     "dotenv": "^17.2.0",
-    "framer-motion": "^12.23.6",
     "lucide-react": "^0.525.0",
     "node-machine-id": "^1.1.12",
-    "react": "^19.1.0",
-    "react-dom": "^19.1.0",
     "sequelize": "^6.37.7",
     "sqlite3": "^5.1.7"
   }
