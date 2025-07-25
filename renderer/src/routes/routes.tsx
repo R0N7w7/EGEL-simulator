@@ -3,6 +3,7 @@ import AuthPage from "../pages/AuthPage";
 import HomePage from "../pages/HomePage";
 import SetupPage from "../pages/SetupPage";
 import { AuthLoader } from "../features/auth/components/AuthLoader";
+import HistoryPage from "../pages/HistoryPage";
 
 export const appRoutes: RouteObject[] = [
     {
@@ -20,5 +21,9 @@ export const appRoutes: RouteObject[] = [
     {
         path: '/setup',
         element: <SetupPage />,
+    },
+    {
+        path: '/history',
+        element: <HistoryPage />,
     }
 ];

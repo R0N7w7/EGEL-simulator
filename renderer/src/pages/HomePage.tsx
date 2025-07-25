@@ -36,7 +36,7 @@ const HomePage = () => {
                     </button>
 
                     <button
-                        onClick={() => handleClick("")}
+                        onClick={() => handleClick("/history")}
                         className="cursor-pointer w-full transition-all duration-300 ease-in-out transform hover:-translate-y-1 hover:shadow-lg flex items-center justify-center space-x-3 bg-white text-black py-4 rounded-2xl text-lg font-medium hover:bg-emerald-100"
                     >
                         <Clock className="h-6 w-6 text-green-500" />
