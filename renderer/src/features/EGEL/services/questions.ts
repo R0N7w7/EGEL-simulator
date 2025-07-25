@@ -50,7 +50,17 @@ const questions: EGELQuestion[] = [
         block: "transversal",
     },
 ];
+const typeMap = {
+    disciplinar: "disciplinary",
+    transversal: "transversal",
+    ambas: "ambas",
+} as const;
 
-export function getQuestions() {
-    return questions;
+type QuestionType = keyof typeof typeMap;
+
+export function getQuestions(type: QuestionType = "ambas"): EGELQuestion[] {
+    if (type === "ambas") return questions;
+
+    const mappedType = typeMap[type];
+    return questions.filter(q => q.block === mappedType);
 }
