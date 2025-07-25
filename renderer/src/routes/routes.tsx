@@ -5,6 +5,7 @@ import SetupPage from "../pages/SetupPage";
 import { AuthLoader } from "../features/auth/components/AuthLoader";
 
 import HistoryPage from "../pages/HistoryPage";
+import { TestPage } from "../pages/TestPage";
 
 
 export const appRoutes: RouteObject[] = [
@@ -27,5 +28,9 @@ export const appRoutes: RouteObject[] = [
     {
         path: '/history',
         element: <HistoryPage />,
+    },
+    {
+        path: '/test',
+        element: <TestPage />,
     }
 ];

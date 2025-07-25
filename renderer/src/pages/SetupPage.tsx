@@ -30,7 +30,7 @@ const SetupPage = () => {
             <div className="bg-white rounded-3xl shadow-lg border border-lime-50 p-12 w-full max-w-3xl text-black z-10 flex flex-col space-y-6 relative">
 
                 {/* botón para volver atrás */}
-                <button onClick={() => navigate(-1)} className="flex items-center text-sm text-black hover:text-green-700">
+                <button onClick={() => navigate('/home')} className="cursor-pointer flex items-center text-sm text-black hover:text-green-700">
                     <ArrowLeft className="h-5 w-5 mr-1" /> Volver
                 </button>
 

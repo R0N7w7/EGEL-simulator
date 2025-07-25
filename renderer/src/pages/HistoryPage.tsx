@@ -25,7 +25,7 @@ const HistoryPage = () => {
     return (
         <div className="min-h-screen bg-gradient-to-b from-white via-lime-50 to-white flex items-center justify-center p-6 font-serif">
             <div className="bg-white rounded-3xl shadow-lg border border-lime-50 p-8 w-full max-w-4xl text-black flex flex-col space-y-6 relative">
-                <button onClick={() => navigate(-1)} className="flex items-center text-sm text-black hover:text-green-700">
+                <button onClick={() => navigate('/home')} className="cursor-pointer flex items-center text-sm text-black hover:text-green-700">
                     <ArrowLeft className="h-5 w-5 mr-1" /> Volver
                 </button>
 
