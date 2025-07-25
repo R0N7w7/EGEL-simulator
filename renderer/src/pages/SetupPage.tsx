@@ -19,9 +19,9 @@ const SetupPage = () => {
             duration: 40000,
             practiceMode: practiceMode,
         };
-
-        console.log("configuration sent to console:", simulationSettings);
         setConfig(simulationSettings);
+
+        navigate("/test");
     };
 
 

@@ -1,15 +1,14 @@
 import { useEffect, useState } from "react";
 import { getQuestions } from "../services/questions";
 
-export function useQuestions() {
+export function useQuestions(type: "disciplinar" | "transversal" | "ambas" = "ambas") {
     const [questions, setQuestions] = useState<EGELQuestion[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
 
     useEffect(() => {
-        // En un futuro aquí podrías hacer fetch a Supabase/API
         const fetchQuestions = async () => {
             try {
-                const data = getQuestions();
+                const data = getQuestions(type);
                 setQuestions(data);
             } catch (error) {
                 console.error("Error al obtener preguntas:", error);
@@ -19,7 +18,7 @@ export function useQuestions() {
         };
 
         fetchQuestions();
-    }, []);
+    }, [type]);
 
     return {
         questions,
