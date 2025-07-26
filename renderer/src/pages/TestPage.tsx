@@ -2,18 +2,22 @@ import React, { useEffect, useState } from "react"
 import { useSetupStore } from "../features/EGEL/hooks/useSetupStore"
 import { useQuestions } from "../features/EGEL/hooks/useQuestions"
 import { Question } from "../features/EGEL/components/Question"
+import { useHistoryStore } from "../features/EGEL/hooks/useHistoryStore";
 import { useNavigate } from "react-router-dom"
 import { ClockIcon } from "lucide-react"
 
 export const TestPage: React.FC = () => {
     const config = useSetupStore((state) => state.config)
-    const { questions: examQuestions, loading } = useQuestions()
+    const { questions: examQuestions, loading } = useQuestions();
+
     const navigate = useNavigate()
 
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
     const [selectedAnswers, setSelectedAnswers] = useState<Record<string, number>>({})
     const [showFeedback, setShowFeedback] = useState(false)
     const [timeLeft, setTimeLeft] = useState(config?.duration ?? 0)
+    const addHistoryEntry = useHistoryStore((state) => state.addEntry);
+
 
     // Redirección si no hay configuración cargada
     useEffect(() => {
@@ -42,13 +46,36 @@ export const TestPage: React.FC = () => {
     }
 
     const nextQuestion = () => {
-        setShowFeedback(false)
-        if (currentQuestionIndex < examQuestions.length - 1) {
-            setCurrentQuestionIndex((prev) => prev + 1)
+        setShowFeedback(false);
+        const isLast = currentQuestionIndex === examQuestions.length - 1
+
+        if (isLast) {
+            const total = examQuestions.length
+
+            // Simulación básica de aciertos (ejemplo: 70% aciertos aleatorios si no tienes correctAnswer)
+            const correct = Math.floor(total * 0.7) // puedes adaptar esto para el real (esto es solo para el examen de prueba)
+            const score = Math.round((correct / total) * 100)
+            const now = new Date();
+            const date = now.toLocaleDateString()
+            const time = now.toLocaleTimeString()
+
+            addHistoryEntry({
+                date,
+                time,
+                score,
+                correct,
+                total,
+                type: config!.area,
+                timerEnabled: config!.timerEnabled,
+                practiceMode: config!.practiceMode,
+            });
+
+            navigate("/history");
         } else {
-            navigate("/home")
+            setCurrentQuestionIndex((prev) => prev + 1);
         }
     }
+
 
     const formatTime = (seconds: number) => {
         const min = Math.floor(seconds / 60)
@@ -69,73 +96,77 @@ export const TestPage: React.FC = () => {
     const isAnswered = selectedAnswer !== undefined
 
     return (
-        <div className="min-h-screen bg-gray-50 p-4">
-            <div className="max-w-4xl mx-auto">
+        <div className="min-h-screen bg-gradient-to-br from-white via-lime-50 to-white p-6 text-gray-800 font-serif">
+            <div className="max-w-4xl mx-auto space-y-6">
                 {/* Header */}
-                <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
+                <div className="bg-white rounded-3xl shadow-lg border border-gray-200 p-6">
                     <div className="flex justify-between items-center mb-4">
-                        <div className="flex items-center gap-2 text-sm">
-                            <span className="px-2 py-1 border rounded">
-                                {config.practiceMode ? "Práctica" : "Simulacro"}
+                        <div className="flex items-center gap-3 text-sm">
+                            <span className="px-4 py-1 rounded-full bg-emerald-100 text-emerald-700 font-semibold shadow-inner">
+                                {config.practiceMode ? "Modo Práctica" : "Simulacro"}
                             </span>
-                            <span className="px-2 py-1 bg-gray-100 rounded capitalize">
+                            <span className="px-4 py-1 bg-blue-100 text-blue-700 rounded-full font-medium capitalize">
                                 {currentQuestion.block}
                             </span>
                         </div>
 
                         {config.timerEnabled && (
-                            <div className="flex items-center space-x-2 text-lg font-mono">
-                                <span><ClockIcon /></span>
-                                <span className={timeLeft < 300 ? "text-red-600" : "text-gray-700"}>
+                            <div className="flex items-center gap-2 text-lg font-mono text-gray-700 animate-fade-in">
+                                <ClockIcon className="w-5 h-5 text-blue-500" />
+                                <span className={timeLeft < 300 ? "text-red-600 font-semibold animate-pulse" : ""}>
                                     {formatTime(timeLeft)}
                                 </span>
                             </div>
                         )}
                     </div>
 
-                    <div className="w-full h-2 bg-gray-200 rounded">
+                    <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
                         <div
-                            className="h-full bg-blue-500 rounded"
+                            className="h-full bg-gradient-to-r from-emerald-400 to-emerald-600 transition-all duration-300 rounded-full"
                             style={{
                                 width: `${((currentQuestionIndex + 1) / examQuestions.length) * 100}%`,
                             }}
                         ></div>
                     </div>
 
-                    <p className="text-sm text-gray-600 mt-2">
+                    <p className="text-sm text-gray-500 mt-2">
                         Pregunta {currentQuestionIndex + 1} de {examQuestions.length}
                     </p>
                 </div>
 
-                {/* Pregunta */}
+                {/* Pregunta estilizada */}
                 <Question
                     question={currentQuestion}
                     selectedAnswer={selectedAnswer}
                     onSelect={(index) => selectAnswer(currentQuestion.id, index)}
                     showFeedback={showFeedback}
                     mode={config.practiceMode ? "practica" : "simulacro"}
+                    allowMultipleSelection={!config.practiceMode}
                 />
 
                 {/* Navegación */}
-                <div className="flex justify-between">
+                <div className="flex justify-between pt-4">
                     <button
-                        onClick={() => window.confirm("¿Seguro que quieres salir?") && window.location.reload()}
-                        className="px-4 py-2 border rounded hover:bg-gray-100 text-sm flex items-center"
+                        onClick={() => navigate("/home")}
+                        className="px-5 py-2 rounded-full bg-white text-gray-600 hover:bg-gray-100 transition shadow text-sm"
                     >
                         ← Salir
                     </button>
                     <button
                         onClick={nextQuestion}
                         disabled={!isAnswered}
-                        className={`px-4 py-2 rounded text-sm flex items-center justify-center gap-2 ${isAnswered
-                            ? "bg-blue-600 text-white hover:bg-blue-700"
-                            : "bg-gray-300 text-gray-500 cursor-not-allowed"
-                            } min-w-[120px]`}
+                        className={`px-6 py-2 rounded-full text-sm font-semibold transition-all duration-300 shadow-md ${isAnswered
+                                ? "bg-green-600 hover:bg-green-700 text-white"
+                                : "bg-gray-200 text-gray-400 cursor-not-allowed"
+                            }`}
                     >
                         {currentQuestionIndex === examQuestions.length - 1 ? "Finalizar" : "Siguiente"} →
                     </button>
+
+
                 </div>
             </div>
         </div>
-    )
+    );
+
 }

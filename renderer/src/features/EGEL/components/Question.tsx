@@ -6,6 +6,7 @@ type Props = {
     onSelect: (index: number) => void
     showFeedback: boolean
     mode: "simulacro" | "practica"
+    allowMultipleSelection?: boolean
 }
 
 export const Question: React.FC<Props> = ({
@@ -14,64 +15,56 @@ export const Question: React.FC<Props> = ({
     onSelect,
     showFeedback,
     mode,
+    allowMultipleSelection,
 }) => {
-    const isCorrect = selectedAnswer === question.correctAnswerIndex
+
+    
 
     return (
-        <div className="mb-6 bg-white border rounded-lg shadow-sm">
-            <div className="p-4 border-b">
-                <h2 className="text-lg font-semibold leading-relaxed"><ReactMarkdown >{question.question}</ReactMarkdown></h2>
-            </div>
-            <div className="p-4 space-y-3">
-                {question.options.map((option, index) => {
-                    const isSelected = selectedAnswer === index
-                    const isCorrectAnswer = index === question.correctAnswerIndex
-                    const feedbackClass =
-                        showFeedback && mode === "practica"
-                            ? isCorrectAnswer
-                                ? "bg-green-50 border-green-200"
-                                : isSelected && !isCorrect
-                                    ? "bg-red-50 border-red-200"
-                                    : "bg-gray-50"
-                            : isSelected
-                                ? "bg-blue-50 border-blue-200"
-                                : "hover:bg-gray-50"
+        <div className="w-full max-w-2xl mx-auto bg-white px-4 py-5 rounded-2xl shadow-md border border-gray-200 transition-all flex flex-col justify-between h-full">
+            <div>
+                <h2 className="text-lg md:text-xl font-serif font-semibold text-gray-800 text-justify mb-4 leading-snug">
+                    <ReactMarkdown>{question.question}</ReactMarkdown>
+                </h2>
 
-                    return (
-                        <div
-                            key={index}
-                            className={`flex items-center space-x-3 p-3 rounded-lg border transition-colors cursor-pointer ${feedbackClass}`}
-                            onClick={() => onSelect(index)}
-                        >
-                            <div className="w-4 h-4 rounded-full border-2 border-gray-400 flex items-center justify-center">
-                                {isSelected && <div className="w-2 h-2 bg-gray-800 rounded-full" />}
+                <div className="space-y-3">
+                    {question.options.map((option, index) => {
+                        const isSelected = selectedAnswer === index;
+
+                        return (
+                            <div
+                                key={index}
+                                onClick={() => {
+                                    if (!allowMultipleSelection && selectedAnswer !== undefined) return;
+                                    onSelect(index);
+                                }}
+
+                                className={`flex items-start px-5 py-3 rounded-xl border transition-all duration-200 cursor-pointer group
+                                    ${isSelected
+                                        ? "bg-emerald-100 border-emerald-300"
+                                        : "bg-white border-gray-300 hover:bg-emerald-50 hover:border-emerald-300"
+                                    }`}
+                            >
+                                <div className="font-semibold text-gray-700 mr-3 pt-1">
+                                    {String.fromCharCode(65 + index)}.
+                                </div>
+                                <div className="text-gray-800 font-sans text-sm leading-relaxed">
+                                    <ReactMarkdown>{option}</ReactMarkdown>
+                                </div>
                             </div>
-                            <label className="flex-1 cursor-pointer select-none flex gap-2">
-                                <span className="font-medium mr-2">{String.fromCharCode(65 + index)}.</span>
-                                <ReactMarkdown>{option}</ReactMarkdown>
-                            </label>
-                            {showFeedback && mode === "practica" && (
-                                <>
-                                    {isCorrectAnswer && <span className="text-green-600 font-bold text-sm">✔</span>}
-                                    {isSelected && !isCorrect && (
-                                        <span className="text-red-600 font-bold text-sm">✖</span>
-                                    )}
-                                </>
-                            )}
-                        </div>
-                    )
-                })}
+                        );
+                    })}
+                </div>
 
                 {showFeedback && mode === "practica" && (
-                    <div className="mt-4 p-4 bg-blue-50 rounded-lg text-sm text-blue-800">
+                    <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-xl text-blue-800 text-sm">
                         <strong>Respuesta correcta:</strong>{" "}
-                        <label className="flex-1 cursor-pointer select-none flex gap-2">
-                            <span className="font-medium mr-2">{String.fromCharCode(65 + question.correctAnswerIndex)}.</span>
-                            <ReactMarkdown>{question.options[question.correctAnswerIndex]}</ReactMarkdown>
-                        </label>
+                        <span className="font-medium">
+                            {String.fromCharCode(65 + question.correctAnswerIndex)}. {question.options[question.correctAnswerIndex]}
+                        </span>
                     </div>
                 )}
             </div>
         </div>
-    )
+    );
 }

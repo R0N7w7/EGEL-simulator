@@ -8,7 +8,7 @@ const SetupPage = () => {
 
     const setConfig = useSetupStore((state) => state.setConfig);
 
-    const [selectedArea, setSelectedArea] = useState("ambas");
+    const [selectedArea, setSelectedArea] = useState<SimulationType>("ambas");
     const [timerEnabled, setTimerEnabled] = useState(true);
     const [practiceMode, setPracticeMode] = useState(false);
 
@@ -52,7 +52,7 @@ const SetupPage = () => {
                                             name="area"
                                             value={value}
                                             checked={selectedArea === value}
-                                            onChange={() => setSelectedArea(value)}
+                                            onChange={() => setSelectedArea(value as SimulationType)}
                                             className="w-5 h-5 accent-green-600"
                                         />
                                         <span className="text-base capitalize">

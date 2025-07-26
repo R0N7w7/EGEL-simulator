@@ -37,3 +37,6 @@ interface EGELQuestion {
     block: "transversal" | "disciplinary";
     subtopic?: string;
 }
+
+
+    type SimulationType = "disciplinar" | "transversal" | "ambas";

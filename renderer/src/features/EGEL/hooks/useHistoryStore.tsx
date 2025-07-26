@@ -1,8 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-type SimulationType = "disciplinar" | "transversal" | "ambas";
-
 export interface HistoryItem {
     id: string;
     date: string;
@@ -11,6 +9,8 @@ export interface HistoryItem {
     correct: number;
     total: number;
     type: SimulationType;
+    timerEnabled?: boolean;
+    practiceMode?: boolean;
 }
 
 interface HistoryState {

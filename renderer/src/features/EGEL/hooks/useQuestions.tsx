@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { getQuestions } from "../services/questions";
 
-export function useQuestions(type: "disciplinar" | "transversal" | "ambas" = "ambas") {
+export function useQuestions(type: SimulationType = "ambas") {
     const [questions, setQuestions] = useState<EGELQuestion[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
 
