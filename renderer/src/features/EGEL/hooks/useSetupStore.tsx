@@ -1,7 +1,7 @@
 import { create } from "zustand";
 
 type SimulationSettings = {
-  area: string;
+  area: SimulationType;
   timerEnabled: boolean;
   duration: number;
   practiceMode: boolean;
