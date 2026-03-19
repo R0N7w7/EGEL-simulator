@@ -1,125 +1,201 @@
 # EGEL Simulator
 
-Aplicacion de escritorio para simular examenes tipo EGEL con control de acceso por licencia.
-El proyecto esta dividido en dos capas principales:
+Desktop application for EGEL-style exam simulation with local + remote license validation.
 
-- `main/`: proceso principal de Electron (Node.js, SQLite, IPC, validacion de licencia)
-- `renderer/`: interfaz React + Vite (autenticacion, configuracion de simulacro, resolucion de preguntas, historial)
+This repository is organized into two runtime layers:
 
-## Contenido
+- `main/`: Electron main process (Node.js, IPC, SQLite, license orchestration)
+- `renderer/`: React app (authentication UI, simulation workflow, exam screens, history)
 
-- [Vision general](#vision-general)
-- [Arquitectura](#arquitectura)
-- [Tecnologias](#tecnologias)
-- [Funciones principales](#funciones-principales)
-- [Estructura del proyecto](#estructura-del-proyecto)
-- [Flujo de licencia](#flujo-de-licencia)
-- [Flujo funcional del simulador](#flujo-funcional-del-simulador)
-- [Configuracion de entorno](#configuracion-de-entorno)
-- [Instalacion y ejecucion](#instalacion-y-ejecucion)
-- [Build y distribucion](#build-y-distribucion)
-- [Canales IPC expuestos](#canales-ipc-expuestos)
-- [Notas y consideraciones](#notas-y-consideraciones)
+## Table of Contents
 
-## Vision general
+- [Project Goals](#project-goals)
+- [High-Level Architecture](#high-level-architecture)
+- [Technical Stack](#technical-stack)
+- [Runtime Lifecycle](#runtime-lifecycle)
+- [License System](#license-system)
+- [Simulation Module](#simulation-module)
+- [Folder Structure](#folder-structure)
+- [Data Model](#data-model)
+- [IPC Contract](#ipc-contract)
+- [Environment Variables](#environment-variables)
+- [Setup and Development](#setup-and-development)
+- [Build and Packaging](#build-and-packaging)
+- [Troubleshooting](#troubleshooting)
+- [Security Notes](#security-notes)
+- [Known Limitations](#known-limitations)
+- [Suggested Next Improvements](#suggested-next-improvements)
 
-La app corre como Electron App y usa un frontend React embebido.
+## Project Goals
 
-1. El usuario abre la aplicacion.
-2. El renderer valida si existe una activacion local valida.
-3. Si no existe, solicita una clave de producto.
-4. El proceso principal valida la clave contra Supabase, la asocia al equipo y guarda activacion local firmada.
-5. Con licencia valida, el usuario puede configurar y ejecutar simulacros, y revisar historial.
+The application is designed to:
 
-## Arquitectura
+1. Restrict access to licensed users.
+2. Bind a product key to a device (`machineId`) through remote validation.
+3. Persist a local activation record for offline startup checks.
+4. Provide a configurable exam simulator (area, timer, practice mode).
+5. Persist user attempts and scores in local frontend state.
 
-### 1) Proceso principal (`main/`)
+## High-Level Architecture
 
-Responsabilidades:
+### 1) Electron Main Process (`main/`)
 
-- Crear ventana Electron (`main/main.js`)
-- Inicializar base local SQLite con Sequelize (`main/db/index.js`)
-- Registrar canales IPC (`main/ipc/index.js`)
-- Validar/activar licencias (servicios local + remoto)
-- Firmar y verificar payload de activacion (HMAC)
+Main responsibilities:
 
-Puntos clave:
+- Bootstrap Electron app and create the BrowserWindow.
+- Configure secure renderer sandboxing (`contextIsolation`, `nodeIntegration: false`).
+- Initialize and sync local SQLite schema through Sequelize.
+- Register IPC handlers for license operations.
+- Execute sensitive operations (remote validation, signature generation/checks).
 
-- Seguridad Electron: `contextIsolation: true`, `nodeIntegration: false`
-- Bridge seguro via preload (`main/preload.js`) usando `contextBridge`
-- Persistencia local de activacion en `license_activations`
+Primary files:
 
-### 2) Preload (`main/preload.js`)
+- `main/main.js`
+- `main/db/index.js`
+- `main/ipc/index.js`
+- `main/ipc/handlers/licenseActivation.handler.js`
 
-Expone en `window.api` un contrato minimo para el renderer:
+### 2) Preload Bridge (`main/preload.js`)
 
-- `licenseActivation.findByProductKey(productKey)`
-- `licenseActivation.verifyLocalActivation()`
-- `licenseActivation.verifyAndActivateKey(productKey)`
+The preload script exposes a minimal, controlled API to the renderer via `contextBridge`.
 
-El renderer no accede directamente a Node ni a `ipcRenderer`.
+Why it matters:
+
+- Renderer code does not directly access Node.js APIs.
+- IPC surface is constrained to explicit methods.
+- Security boundary is clear and auditable.
 
 ### 3) Renderer (`renderer/`)
 
-Responsabilidades:
+Main responsibilities:
 
-- Routing y control de acceso por licencia
-- Pantallas de autenticacion y flujo de simulacro
-- Estado global con Zustand
-- Presentacion de preguntas con soporte Markdown (`react-markdown`)
+- Route control and license-based navigation.
+- Product key capture and activation UX.
+- Exam setup and test flow.
+- Attempt history rendering.
+- Local UI state handling through Zustand stores.
 
-Rutas principales:
+Entry points:
 
-- `/` -> `AuthLoader` (redirige segun estado de licencia)
-- `/auth` -> captura y validacion de product key
-- `/home` -> dashboard principal
-- `/setup` -> configuracion de simulacro
-- `/test` -> ejecucion de examen
-- `/history` -> historial persistente
+- `renderer/src/main.tsx`: HashRouter bootstrap.
+- `renderer/src/App.tsx`: initial license refresh and route mounting.
+- `renderer/src/routes/routes.tsx`: route table.
 
-## Tecnologias
+## Technical Stack
 
-### Core
+### Core Runtime
 
-- Electron 27
-- Node.js (CommonJS en proceso principal)
-- React 19
+- Electron `^27.0.0`
+- Node.js (CommonJS in main process)
+- React `^19.1.0`
 - TypeScript (renderer)
-- Vite 7
+- Vite `^7.0.5`
 
-### Estado y routing
+### Data and Persistence
 
-- Zustand (estado local y persistencia)
-- React Router DOM
+- SQLite (`sqlite3`)
+- Sequelize (`^6.37.7`)
+- Supabase client (`@supabase/supabase-js`)
 
-### Datos y backend remoto
+### State and Routing
 
-- SQLite (archivo local)
-- Sequelize
-- Supabase JS Client
+- Zustand (`^5.0.6`)
+- Zustand persist middleware
+- React Router DOM (`^7.6.3`)
 
-### UI
+### UI and Content
 
 - Tailwind CSS v4
-- Lucide React
-- React Markdown
+- Lucide React icons
+- React Markdown (question/option rendering)
 
-### Build
+### Tooling
 
-- electron-builder
-- concurrently (dev main + renderer)
+- concurrently (parallel dev scripts)
+- electron-builder (desktop packaging)
 
-## Funciones principales
+## Runtime Lifecycle
 
-- Activacion de licencia por clave UUID.
-- Verificacion local de licencia en cada arranque.
-- Firma HMAC del payload local para detectar alteraciones.
-- Binding de licencia a `machineId` del equipo.
-- Configuracion de simulacro (area, cronometro, modo practica).
-- Render de preguntas y opciones con Markdown.
-- Historial de resultados persistente en frontend.
+### Development flow
 
-## Estructura del proyecto
+1. Run `npm run dev` from repository root.
+2. Vite dev server starts in `renderer/`.
+3. Electron main process starts and points to `http://localhost:5173`.
+4. BrowserWindow opens and IPC handlers are registered.
+
+### Production flow
+
+1. Build renderer static assets.
+2. Package Electron app with `electron-builder`.
+3. In packaged mode, Electron loads `renderer/dist/index.html`.
+
+## License System
+
+The license subsystem is the core access-control layer.
+
+### Activation flow (`verifyAndActivateKey`)
+
+1. User enters a UUID product key on `AuthPage`.
+2. Renderer calls `window.api.licenseActivation.verifyAndActivateKey(productKey)`.
+3. Main process obtains `machineId` using `node-machine-id`.
+4. Main process fetches remote license from Supabase (`licenses` table).
+5. Validation checks:
+   - license exists
+   - license status is `active`
+   - license is not bound to a different machine
+6. If valid, app updates remote record with `machineId` + activation timestamp.
+7. App creates local activation record in SQLite.
+8. Local record includes an HMAC signature of `{ productKey, machineId }`.
+
+### Local verification flow (`verifyLocalActivation`)
+
+1. On startup, renderer executes `useLicenseStore.refresh()`.
+2. Renderer requests local validation via IPC.
+3. Main process loads first local activation from SQLite.
+4. Main process recomputes HMAC using `SIGNATURE_SECRET`.
+5. If signature mismatch is detected:
+   - activation record is deleted
+   - access is denied
+6. If valid, user is considered authenticated and redirected to `/home`.
+
+### Signature design
+
+- Algorithm: HMAC-SHA256
+- Key: `SIGNATURE_SECRET`
+- Payload normalization: keys are recursively sorted before hashing
+
+This design prevents trivial local record tampering.
+
+## Simulation Module
+
+The simulation flow is entirely in renderer state.
+
+### Setup (`/setup`)
+
+User chooses:
+
+- `area`: `disciplinar`, `transversal`, or `ambas`
+- `timerEnabled`: boolean
+- `practiceMode`: boolean
+- `duration`: currently hardcoded in setup logic
+
+Configuration is stored in `useSetupStore`.
+
+### Test execution (`/test`)
+
+- Questions are loaded via `useQuestions()`.
+- Question card is rendered by `Question` component.
+- Markdown is supported in prompts/options.
+- Timer counts down if enabled.
+- In practice mode, immediate answer feedback is shown.
+
+### History (`/history`)
+
+- Attempt summaries are saved in `useHistoryStore`.
+- Store uses Zustand `persist` middleware.
+- Metrics include score, correct answers, mode, timer, and area.
+
+## Folder Structure
 
 ```text
 .
@@ -145,117 +221,49 @@ Rutas principales:
 |       \-- client.js
 \-- renderer/
     |-- package.json
+    |-- vite.config.ts
     |-- src/
     |   |-- App.tsx
     |   |-- main.tsx
+    |   |-- vite-env.d.ts
     |   |-- routes/routes.tsx
     |   |-- pages/
     |   \-- features/
     |       |-- auth/
     |       \-- EGEL/
-    \-- ...
+    \-- public/
 ```
 
-## Flujo de licencia
+## Data Model
 
-### Activacion remota + persistencia local
+### Local table: `license_activations`
 
-1. El usuario ingresa `productKey` en `/auth`.
-2. Renderer llama `window.api.licenseActivation.verifyAndActivateKey(productKey)`.
-3. En main:
-   - obtiene `machineId` local
-   - busca licencia en Supabase (`licenses`)
-   - valida estado (`active`)
-   - valida si ya esta asociada a otro equipo
-   - intenta bind remoto (`update machineId, activated_at`)
-   - guarda activacion local con firma HMAC
-4. Devuelve respuesta estandar IPC (`successResponse` o `errorResponse`).
+Defined in `main/db/models/LicenseActivation.js`.
 
-### Validacion local en arranque
+Fields:
 
-1. `useLicenseStore.refresh()` ejecuta `verifyLocalKey()`.
-2. `verifyLocalKey()` llama `verifyLocalActivation()` por IPC.
-3. Main recupera la licencia local y verifica la firma.
-4. Si la firma no coincide, elimina el registro local y retorna error.
-5. `AuthLoader` redirige a `/home` o `/auth`.
+- `id` (INTEGER, PK, autoincrement)
+- `productKey` (STRING, unique, not null)
+- `machineId` (STRING, not null)
+- `careerId` (STRING, nullable)
+- `activatedAt` (DATE, default now)
+- `signature` (TEXT, nullable)
 
-## Flujo funcional del simulador
+Storage location:
 
-1. En `/setup`, usuario define:
-   - area (`disciplinar`, `transversal`, `ambas`)
-   - cronometro on/off
-   - modo practica on/off
-2. Config se guarda en Zustand (`useSetupStore`).
-3. En `/test`, `useQuestions` obtiene preguntas segun area.
-4. Se administra avance de preguntas, seleccion de respuesta y timer.
-5. Al finalizar se calcula score y se registra en `useHistoryStore`.
-6. `/history` muestra resultados acumulados.
+- During Electron runtime: `app.getPath('userData')/data.sqlite`
+- Outside Electron context: fallback to `main/db/data.sqlite`
 
-## Configuracion de entorno
+## IPC Contract
 
-Crear archivo `.env` en la raiz con:
+All channels return normalized envelopes from `ipcResponse.js`:
 
-```env
-SUPABASE_URL=tu_url_supabase
-SUPABASE_ANON_KEY=tu_anon_key
-SIGNATURE_SECRET=un_secreto_largo_y_unico
-```
+- success: `{ success: true, data }`
+- error: `{ success: false, error: { code, message } }`
 
-Variables usadas:
+### Channels currently registered
 
-- `SUPABASE_URL`: endpoint de proyecto Supabase
-- `SUPABASE_ANON_KEY`: key de acceso usada por el cliente remoto
-- `SIGNATURE_SECRET`: secreto para HMAC de activaciones locales
-
-## Instalacion y ejecucion
-
-### Requisitos
-
-- Node.js 18+
-- npm 9+
-
-### Instalar dependencias
-
-```bash
-npm run install:all
-```
-
-### Modo desarrollo
-
-```bash
-npm run dev
-```
-
-Esto levanta en paralelo:
-
-- renderer Vite en `http://localhost:5173`
-- proceso Electron apuntando al renderer en desarrollo
-
-## Build y distribucion
-
-### Build completo
-
-```bash
-npm run build
-```
-
-### Build solo renderer
-
-```bash
-npm run build:renderer
-```
-
-### Build paquete Electron
-
-```bash
-npm run build:main
-```
-
-## Canales IPC expuestos
-
-Definidos principalmente en `main/ipc/handlers/licenseActivation.handler.js`.
-
-Canales CRUD/local:
+CRUD-like:
 
 - `licenseActivation:findAll`
 - `licenseActivation:create`
@@ -266,24 +274,124 @@ Canales CRUD/local:
 - `licenseActivation:findFirst`
 - `licenseActivation:deleteAll`
 
-Canales de negocio:
+Business flows:
 
 - `licenseActivation:verifyAndActivateKey`
 - `licenseActivation:verifyLocalActivation`
 
-Formato de respuesta:
+### Exposed preload API (`window.api`)
 
-- exito: `{ success: true, data }`
-- error: `{ success: false, error: { code, message } }`
+The renderer currently consumes:
 
-## Notas y consideraciones
+- `licenseActivation.findByProductKey(productKey)`
+- `licenseActivation.verifyLocalActivation()`
+- `licenseActivation.verifyAndActivateKey(productKey)`
 
-- La base SQLite se guarda en `app.getPath('userData')` cuando corre en Electron.
-- La activacion local usa `productKey` unico en DB.
-- El historial de simulacros se persiste en storage del renderer (Zustand persist).
-- Actualmente las preguntas provienen de un arreglo local (`renderer/src/features/EGEL/services/questions.ts`).
-- El score en `TestPage` se calcula de forma simplificada (base 70%) y puede evolucionar a un calculo real por `correctAnswerIndex`.
+## Environment Variables
 
----
+Create a `.env` file in repository root:
 
-Si vas a extender el proyecto, una evolucion natural es mover banco de preguntas e historial a una capa de datos formal (local o remota) y reforzar el control de rutas con `ProtectedRoute` en las rutas sensibles (`/home`, `/setup`, `/test`, `/history`).
+```env
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_ANON_KEY=your_anon_key
+SIGNATURE_SECRET=replace_with_a_long_random_secret
+```
+
+Variable usage:
+
+- `SUPABASE_URL`: Supabase project endpoint
+- `SUPABASE_ANON_KEY`: key used by main process Supabase client
+- `SIGNATURE_SECRET`: cryptographic key for activation signatures
+
+## Setup and Development
+
+### Requirements
+
+- Node.js 18+
+- npm 9+
+
+### Install dependencies
+
+```bash
+npm run install:all
+```
+
+This installs root dependencies and renderer dependencies.
+
+### Run in development mode
+
+```bash
+npm run dev
+```
+
+Processes started:
+
+- `dev:renderer`: Vite dev server
+- `dev:main`: Electron app
+
+## Build and Packaging
+
+### Build renderer only
+
+```bash
+npm run build:renderer
+```
+
+### Package Electron app only
+
+```bash
+npm run build:main
+```
+
+### Full build pipeline
+
+```bash
+npm run build
+```
+
+Pipeline behavior:
+
+1. Build renderer static bundle.
+2. Run `electron-builder`.
+
+## Troubleshooting
+
+### App starts but license validation always fails
+
+- Check `.env` values (`SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SIGNATURE_SECRET`).
+- Confirm remote `licenses` table uses the expected columns (`product_key`, `status`, `machineId`, `activated_at`).
+
+### Immediate crash in main process on startup
+
+- Ensure `SIGNATURE_SECRET` is defined.
+- `main/ipc/utils/signature.js` throws if secret is missing.
+
+### Renderer opens but shows blank/invalid route behavior
+
+- Verify HashRouter route paths in `renderer/src/routes/routes.tsx`.
+- Verify first load redirects from `AuthLoader` based on `useLicenseStore` state.
+
+## Security Notes
+
+- Renderer isolation is enabled (`contextIsolation: true`).
+- Node integration in renderer is disabled (`nodeIntegration: false`).
+- Preload restricts renderer access to a minimal IPC API.
+- Local activation integrity uses HMAC signatures.
+
+Important caveat:
+
+- The project currently uses Supabase anon key on client side of the main process. For stronger protection, move license validation/binding behind a secure server function with stricter policies.
+
+## Known Limitations
+
+- Question bank is currently hardcoded (`renderer/src/features/EGEL/services/questions.ts`).
+- Test score logic in `TestPage` is still simplified (fixed 70% strategy) instead of deriving from actual selected answers.
+- `ProtectedRoute` exists but is not consistently applied to all sensitive routes in the route table.
+
+## Suggested Next Improvements
+
+1. Enforce `ProtectedRoute` on `/home`, `/setup`, `/test`, and `/history`.
+2. Compute score from real answer evaluation using `correctAnswerIndex`.
+3. Move question bank to local DB or remote content service.
+4. Add automated tests for IPC handlers and state stores.
+5. Add telemetry/logging abstraction for production diagnostics.
